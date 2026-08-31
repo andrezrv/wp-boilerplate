@@ -170,6 +170,7 @@ push() {
 
     local remote_dir="/var/backups/$SITE_NAME/incoming"
     echo "==> Uploading to $ENVIRONMENT:$remote_dir/..."
+    echo "$SITE_ALIAS" "mkdir -p $remote_dir"
     ssh "$SITE_ALIAS" "mkdir -p $remote_dir"
     scp "$newest" "$SITE_ALIAS:$remote_dir/"
 
