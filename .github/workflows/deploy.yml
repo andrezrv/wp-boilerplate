@@ -50,4 +50,4 @@ jobs:
       - name: Finish deploy on the server
         run: |
           ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
-            "sudo /tmp/finish-deploy ${{ secrets.SITE_NAME_PRODUCTION }} $STAGING_PATH $DEPLOY_ENVIRONMENT 2>&1 | tee -a /var/log/deploy-${{ secrets.SITE_NAME }}.log"
+            "sudo /tmp/finish-deploy ${{ secrets.SITE_NAME }} $STAGING_PATH $DEPLOY_ENVIRONMENT 2>&1 | tee -a /var/log/deploy-${{ secrets.SITE_NAME }}.log"
