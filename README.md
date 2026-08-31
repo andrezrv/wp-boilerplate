@@ -163,6 +163,8 @@ Set these in the repository's **Settings → Secrets and variables → Actions**
 | `DEPLOY_USER` | SSH user on the production server |
 | `SITE_NAME` | Site name as it appears in `/var/www/` on the server (e.g. `your-site.com`) |
 
+*Note:* You may need to create new secrets and workflows for each environment you want to deploy to.
+
 If your `composer.json` references private repositories (e.g. premium plugins hosted on GitHub), add a separate SSH key secret for each one and load them in a dedicated SSH agent step before `composer update` runs — then replace that agent with a fresh one carrying only `DEPLOY_SSH_KEY` before connecting to the server. This avoids offering the wrong keys to the production server and hitting its `MaxAuthTries` limit.
 
 ## Server-side scripts
