@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SITE_ROOT="$(cd "$PROJECT_ROOT/.." && pwd)"
+BACKUP_DIR="$SITE_ROOT/backups"
+SQL_DIR="$SITE_ROOT/sql"
+
+CLEAR_DB=true
+CLEAR_FILES=true
+
+for arg in "$@"; do
+    case "$arg" in
+        --db-only)
+            CLEAR_FILES=false
+            ;;
+        --files-only)
+            CLEAR_DB=false
+            ;;
+        *)
+            echo "Unknown flag: $arg" >&2
+            echo "Usage: clear-backups [--db-only|--files-only]" >&2
+            exit 1
+            ;;
+    esac
+done
+
+if $CLEAR_DB; then
+    if [ -d "$SQL_DIR" ] && [ -n "$(ls "$SQL_DIR"/*.sql.gz 2>/dev/null)" ]; then
+        rm "$SQL_DIR"/*.sql.gz
+        echo "==> SQL backups cleared."
+    else
+        echo "==> No SQL backups to clear."
+    fi
+fi
+
+if $CLEAR_FILES; then
+    if [ -d "$BACKUP_DIR" ] && [ -n "$(ls "$BACKUP_DIR"/*.zip 2>/dev/null)" ]; then
+        rm "$BACKUP_DIR"/*.zip
+        echo "==> File backups cleared."
+    else
+        echo "==> No file backups to clear."
+    fi
+fi

@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+show_backup() {
+    cat <<'EOF'
+Backup commands:
+  yarn backup          Back up database and files
+  yarn backup:db       Back up database only
+  yarn backup:files    Back up files only
+  yarn db:backup       Alias for backup:db
+EOF
+}
+
+show_cleanup() {
+    cat <<'EOF'
+Cleanup commands:
+  yarn cleanup         Remove all database and file backups
+  yarn cleanup:db      Remove database backups only
+  yarn cleanup:files   Remove file backups only
+EOF
+}
+
+show_db() {
+    cat <<'EOF'
+Database sync commands:
+  yarn db:backup       Back up local database only
+  yarn db:pull         Pull database from a remote environment
+  yarn db:push         Push database to a remote environment
+  yarn db:recover      Import a local database dump interactively
+  yarn db:restore      Alias for db:recover
+EOF
+}
+
+case "${1:-}" in
+    backup)  show_backup ;;
+    cleanup) show_cleanup ;;
+    db)      show_db ;;
+    *)
+        cat <<'EOF'
+Usage: yarn <command>
+
+Run "yarn <group>:help" for details on each group.
+
+  yarn backup:help     Backup commands
+  yarn cleanup:help    Cleanup commands
+  yarn db:help         Database sync commands
+EOF
+        ;;
+esac

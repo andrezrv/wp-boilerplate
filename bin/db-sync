@@ -1,0 +1,183 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SITE_ROOT="$(cd "$PROJECT_ROOT/.." && pwd)"
+SQL_DIR="$SITE_ROOT/sql"
+
+ACTION="${1:-}"
+REQUESTED_ENV="${2:-}"
+
+if [ "$ACTION" != "pull" ] && [ "$ACTION" != "push" ] && [ "$ACTION" != "recover" ]; then
+    echo "Usage: db-sync <pull|push|recover> [environment]" >&2
+    exit 1
+fi
+
+get_env_value() {
+    local key="$1" file="$2"
+    grep -E "^${key}=" "$file" | tail -n1 | cut -d '=' -f2- \
+        | sed -e 's/^"//' -e 's/"$//' -e "s/^'//" -e "s/'$//"
+}
+
+# --- recover: local-only, no remote environment involved ---
+if [ "$ACTION" = "recover" ]; then
+    source "$SCRIPT_DIR/load-local-environment"
+    # shellcheck source=/dev/null
+    source "$PROJECT_ROOT/.env.local"
+
+    mkdir -p "$SQL_DIR"
+    dumps=()
+    while IFS= read -r f; do dumps+=("$f"); done < <(ls -t "$SQL_DIR"/*.sql* 2>/dev/null)
+
+    if [ ${#dumps[@]} -eq 0 ]; then
+        echo "No dumps found in $SQL_DIR" >&2
+        exit 1
+    fi
+
+    echo "Available dumps in $SQL_DIR:"
+    i=1
+    for d in "${dumps[@]}"; do
+        echo "  $i) $(basename "$d")"
+        i=$((i + 1))
+    done
+    read -r -p "Select a dump to import [1-${#dumps[@]}]: " choice
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt "${#dumps[@]}" ]; then
+        echo "Invalid selection" >&2
+        exit 1
+    fi
+    selected="${dumps[$((choice - 1))]}"
+
+    echo "==> Importing $(basename "$selected")..."
+
+    normalize_collations() {
+        LC_ALL=C sed \
+            -e 's/utf8mb3_uca1400_[a-z_]*/utf8_general_ci/g' \
+            -e 's/utf8mb4_uca1400_[a-z_]*/utf8mb4_unicode_ci/g' \
+            -e 's/utf8_uca1400_[a-z_]*/utf8_general_ci/g'
+    }
+
+    export MYSQL_PWD="$DB_PASSWORD"
+    if [[ "$selected" == *.gz ]]; then
+        gunzip -c "$selected" | normalize_collations | mysql --default-character-set=utf8mb4 -u"$DB_USER" "$DB_NAME"
+    else
+        normalize_collations < "$selected" | mysql --default-character-set=utf8mb4 -u"$DB_USER" "$DB_NAME"
+    fi
+    unset MYSQL_PWD
+
+    echo "==> Recover complete."
+    exit 0
+fi
+
+# --- pull/push: need a remote environment, discovered from whichever
+# .env.<environment> files actually exist alongside .env.local/.env.secret ---
+list_remote_envs() {
+    for f in "$PROJECT_ROOT"/.env.*; do
+        [ -e "$f" ] || continue
+        base="$(basename "$f")"
+        case "$base" in
+            .env.local|.env.secret) ;;
+            *)
+                echo "${base#.env.}"
+                ;;
+        esac
+    done
+}
+
+select_environment() {
+    if [ -n "$REQUESTED_ENV" ]; then
+        if [ ! -f "$PROJECT_ROOT/.env.$REQUESTED_ENV" ]; then
+            echo "ERROR: $PROJECT_ROOT/.env.$REQUESTED_ENV not found" >&2
+            exit 1
+        fi
+        echo "$REQUESTED_ENV"
+        return
+    fi
+
+    local envs=()
+    while IFS= read -r e; do envs+=("$e"); done < <(list_remote_envs)
+
+    if [ ${#envs[@]} -eq 0 ]; then
+        echo "ERROR: no .env.<environment> files found in $PROJECT_ROOT" >&2
+        exit 1
+    fi
+
+    echo "Available environments:" >&2
+    local i=1
+    for e in "${envs[@]}"; do
+        echo "  $i) $e" >&2
+        i=$((i + 1))
+    done
+    read -r -p "Select an environment [1-${#envs[@]}]: " choice
+    if ! [[ "$choice" =~ ^[0-9]+$ ]] || [ "$choice" -lt 1 ] || [ "$choice" -gt "${#envs[@]}" ]; then
+        echo "Invalid selection" >&2
+        exit 1
+    fi
+    echo "${envs[$((choice - 1))]}"
+}
+
+ENVIRONMENT="$(select_environment)"
+ENV_FILE="$PROJECT_ROOT/.env.$ENVIRONMENT"
+
+SITE_ALIAS="$(get_env_value SITE_ALIAS "$ENV_FILE")"
+SITE_NAME="$(get_env_value SITE_NAME "$ENV_FILE")"
+
+if [ -z "$SITE_ALIAS" ] || [ -z "$SITE_NAME" ]; then
+    echo "ERROR: $ENV_FILE is missing SITE_ALIAS or SITE_NAME" >&2
+    exit 1
+fi
+
+mkdir -p "$SQL_DIR"
+
+echo "==> Environment: $ENVIRONMENT ($SITE_ALIAS)"
+
+pull() {
+    echo "==> Triggering a fresh backup on $ENVIRONMENT..."
+    ssh "$SITE_ALIAS" "sudo backup-sites --db-only $SITE_NAME"
+
+    echo "==> Locating the newest backup..."
+    local remote_file
+    remote_file="$(ssh "$SITE_ALIAS" "ls -t /var/backups/$SITE_NAME/*.sql.gz | head -n1")"
+    if [ -z "$remote_file" ]; then
+        echo "ERROR: could not find a backup file on $ENVIRONMENT" >&2
+        exit 1
+    fi
+
+    local local_file="$SQL_DIR/$(basename "$remote_file")"
+    echo "==> Downloading $remote_file..."
+    scp "$SITE_ALIAS:$remote_file" "$local_file"
+
+    echo "==> Pull complete: $local_file"
+    echo "    Run 'db-sync recover' to import it."
+}
+
+push() {
+    echo "==> Looking for the newest dump in $SQL_DIR..."
+    local newest
+    newest="$(ls -t "$SQL_DIR"/*.sql* 2>/dev/null | head -n1)"
+
+    if [ -z "$newest" ]; then
+        echo "ERROR: no dump files found in $SQL_DIR" >&2
+        exit 1
+    fi
+
+    echo "Found: $newest"
+    read -r -p "Push this file to $ENVIRONMENT for later manual import? [y/N] " confirm
+    if [ "$confirm" != "y" ] && [ "$confirm" != "Y" ]; then
+        echo "Aborted."
+        exit 1
+    fi
+
+    local remote_dir="/var/backups/$SITE_NAME/incoming"
+    echo "==> Uploading to $ENVIRONMENT:$remote_dir/..."
+    ssh "$SITE_ALIAS" "mkdir -p $remote_dir"
+    scp "$newest" "$SITE_ALIAS:$remote_dir/"
+
+    echo "==> Push complete: $remote_dir/$(basename "$newest")"
+    echo "    Import it manually on the server whenever you're ready."
+}
+
+case "$ACTION" in
+    pull) pull ;;
+    push) push ;;
+esac

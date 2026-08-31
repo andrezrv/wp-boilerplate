@@ -1,0 +1,53 @@
+name: Deploy
+
+on:
+  # Uncomment to deploy on push to main.
+  # push:
+  #  branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: production
+    env:
+      DEPLOY_ENVIRONMENT: production
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+
+      - name: Install dependencies
+        run: composer update --no-interaction --no-progress
+
+      # A fresh agent instance — only this one key gets offered when
+      # connecting to the production server.
+      - name: Load SSH key for production server
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_KEY }}
+
+      - name: Add production server to known_hosts
+        run: ssh-keyscan -H ${{ secrets.DEPLOY_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Transfer build to a staging location on the server
+        run: |
+          STAGING_PATH="/home/${{ secrets.DEPLOY_USER }}/deploy-staging-${{ github.run_id }}"
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} "mkdir -p $STAGING_PATH"
+          rsync -az --delete --exclude='.git' ./ \
+            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:$STAGING_PATH/
+          echo "STAGING_PATH=$STAGING_PATH" >> "$GITHUB_ENV"
+
+      - name: Copy finish-deploy to its fixed path on the server
+        run: |
+          scp -p bin/finish-deploy \
+            ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/tmp/finish-deploy
+
+      - name: Finish deploy on the server
+        run: |
+          ssh ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }} \
+            "sudo /tmp/finish-deploy ${{ secrets.SITE_NAME }} $STAGING_PATH $DEPLOY_ENVIRONMENT 2>&1 | tee -a /var/log/deploy-${{ secrets.SITE_NAME }}.log"

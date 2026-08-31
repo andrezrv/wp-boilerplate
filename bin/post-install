@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+PROJECT_ROOT="$(pwd)"
+TMP_CORE_DIR="$PROJECT_ROOT/.wp-core-tmp"
+PUBLIC_DIR="$PROJECT_ROOT/public"
+
+# Move freshly-installed WP core out of the temp location and into
+# public/. This never touches anything else already in public/ (namely
+# wp-config.php), since it only moves the specific items core installed
+# into the temp dir — Composer's installer never sees public/ directly.
+if [ -d "$TMP_CORE_DIR" ]; then
+    mkdir -p "$PUBLIC_DIR"
+    shopt -s dotglob nullglob
+    for item in "$TMP_CORE_DIR"/*; do
+        base="$(basename "$item")"
+        rm -rf "${PUBLIC_DIR:?}/${base:?}"
+        mv "$item" "$PUBLIC_DIR/"
+    done
+    shopt -u dotglob nullglob
+    rmdir "$TMP_CORE_DIR" 2>/dev/null || rm -rf "$TMP_CORE_DIR"
+fi
+
+# content/uploads -> ../shared/uploads, relative, one level up from
+# content/. Correct as-is for local dev (shared/ genuinely sits one
+# level above the project root there). On a production deploy built on
+# a GitHub Actions runner, this symlink is meaningless at build time —
+# shared/ doesn't exist on the runner at all — and gets recreated
+# correctly as a separate step once the built package actually lands
+# on the production server, where the real path is known.
+mkdir -p "$PROJECT_ROOT/content"
+rm -rf "$PROJECT_ROOT/content/uploads"
+ln -sfn "../../shared/uploads" "$PROJECT_ROOT/content/uploads"
+
+# public/ symlinks, relative, favicons now under assets/
+rm -f "$PUBLIC_DIR/content"
+ln -sfn "../content" "$PUBLIC_DIR/content"
+
+rm -f "$PUBLIC_DIR/favicons"
+ln -sfn "../assets/favicons" "$PUBLIC_DIR/favicons"
+
+rm -f "$PUBLIC_DIR/favicon.ico"
+ln -sfn "../assets/favicons/favicon.ico" "$PUBLIC_DIR/favicon.ico"
+
+rm -f "$PUBLIC_DIR/favicon.svg"
+ln -sfn "../assets/favicons/favicon.svg" "$PUBLIC_DIR/favicon.svg"
+
+echo "post-composer-install: symlinks rebuilt"

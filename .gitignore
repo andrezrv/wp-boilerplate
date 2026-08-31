@@ -1,0 +1,12 @@
+.DS_Store
+.env*
+bin/*.conf
+composer.lock
+content/*
+!content/index.php
+!content/mu-plugins/
+node_modules/
+public/*
+!public/wp-config.php
+vendor/
+yarn.lock

@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# bin/load-local-environment — meant to be sourced, not executed directly.
+#
+# Verifies wp and mysql are available in PATH before the caller tries to
+# use them. Assumes whatever provides these (Local's PHP/MySQL/WP-CLI
+# setup) is already loaded by the calling shell — configured once,
+# outside these scripts, rather than sourced fresh on every run.
+
+if ! command -v wp >/dev/null 2>&1; then
+    echo "ERROR: 'wp' command not found in PATH" >&2
+    echo "Make sure this shell has Local's environment loaded before running this command." >&2
+    exit 1
+fi
+if ! command -v mysql >/dev/null 2>&1; then
+    echo "ERROR: 'mysql' command not found in PATH" >&2
+    echo "Make sure this shell has Local's environment loaded before running this command." >&2
+    exit 1
+fi

@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SITE_ROOT="$(cd "$PROJECT_ROOT/.." && pwd)"
+BACKUP_DIR="$SITE_ROOT/backups"
+SQL_DIR="$SITE_ROOT/sql"
+
+BACKUP_DB=true
+BACKUP_FILES=true
+
+for arg in "$@"; do
+    case "$arg" in
+        --db-only)
+            BACKUP_FILES=false
+            ;;
+        --files-only)
+            BACKUP_DB=false
+            ;;
+        *)
+            echo "Unknown flag: $arg" >&2
+            echo "Usage: backup-site [--db-only|--files-only]" >&2
+            exit 1
+            ;;
+    esac
+done
+
+TIMESTAMP="$(date +%s)"
+
+# shellcheck source=/dev/null
+source "$PROJECT_ROOT/.env.local"
+
+if $BACKUP_DB; then
+    source "$SCRIPT_DIR/load-local-environment"
+
+    mkdir -p "$SQL_DIR"
+    DUMP_FILE="$SQL_DIR/${TIMESTAMP}-${SITE_NAME}.sql"
+    echo "==> Exporting local database to $DUMP_FILE..."
+    export MYSQL_PWD="$DB_PASSWORD"
+    mysqldump -u"$DB_USER" "$DB_NAME" > "$DUMP_FILE"
+    unset MYSQL_PWD
+    gzip "$DUMP_FILE"
+    echo "==> Database dump complete: ${DUMP_FILE}.gz"
+fi
+
+if $BACKUP_FILES; then
+    mkdir -p "$BACKUP_DIR"
+    BACKUP_FILE="$BACKUP_DIR/${TIMESTAMP}-${SITE_NAME}.zip"
+    echo "==> Creating $BACKUP_FILE (excluding .git)..."
+    cd "$PROJECT_ROOT"
+    zip -r -q "$BACKUP_FILE" . -x ".git/*" ".git"
+    echo "==> Files backup complete: $BACKUP_FILE ($(du -h "$BACKUP_FILE" | cut -f1))"
+fi

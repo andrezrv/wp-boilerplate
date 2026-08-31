@@ -1,0 +1,21 @@
+{
+    "name": "your-site",
+    "private": true,
+    "scripts": {
+        ":help": "bin/help",
+        "backup": "bin/backup-site",
+        "backup:db": "bin/backup-site --db-only",
+        "backup:files": "bin/backup-site --files-only",
+        "backup:help": "bin/help backup",
+        "cleanup": "bin/clear-backups",
+        "cleanup:db": "bin/clear-backups --db-only",
+        "cleanup:files": "bin/clear-backups --files-only",
+        "cleanup:help": "bin/help cleanup",
+        "db:backup": "bin/backup-site --db-only",
+        "db:pull": "bin/db-sync pull",
+        "db:push": "bin/db-sync push",
+        "db:recover": "bin/db-sync recover",
+        "db:restore": "bin/db-sync recover",
+        "db:help": "bin/help db"
+    }
+}

@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Usage: finish-deploy <site-name> <staging-path> <environment>
+# staging-path is where the CI runner already rsynced the freshly-built
+# release (owned by the login user, not yet trusted with root over the
+# site's real directories — this script is what extends that trust,
+# deliberately, in one narrow, auditable place). environment determines
+# which config/<environment>-config.php survives the deploy.
+
+SITE_NAME="${1:-}"
+STAGING_PATH="${2:-}"
+ENVIRONMENT="${3:-}"
+SITES_ROOT="/var/www"
+KEEP_RELEASES=3
+
+if [ -z "$SITE_NAME" ] || [ -z "$STAGING_PATH" ] || [ -z "$ENVIRONMENT" ]; then
+    echo "Usage: finish-deploy <site-name> <staging-path> <environment>" >&2
+    exit 1
+fi
+
+SITE_DIR="$SITES_ROOT/$SITE_NAME"
+
+if [ ! -d "$SITE_DIR" ]; then
+    echo "ERROR: $SITE_DIR does not exist" >&2
+    exit 1
+fi
+if [ ! -d "$STAGING_PATH" ]; then
+    echo "ERROR: $STAGING_PATH does not exist" >&2
+    exit 1
+fi
+
+log() {
+    echo "$(date '+%Y-%m-%d %H:%M:%S') - $1"
+}
+
+CURRENT_TARGET="$(readlink -f "$SITE_DIR/current" 2>/dev/null || true)"
+if [ -z "$CURRENT_TARGET" ] || [ ! -d "$CURRENT_TARGET" ]; then
+    log "ERROR: no valid current release found — cannot determine site user or merge forward"
+    exit 1
+fi
+
+SITE_USER="$(stat -c '%U' "$CURRENT_TARGET/public")"
+
+# --- Merge forward everything in content/ that git/Composer doesn't
+# manage — cache, the drop-in files, anything else a plugin writes at
+# runtime. mu-plugins/plugins/themes/uploads are excluded: those are
+# fresh from this deploy (git, Composer, Composer, symlink respectively).
+log "Merging forward content/ items not managed by this deploy..."
+if [ -d "$CURRENT_TARGET/content" ]; then
+    while IFS= read -r entry; do
+        base="$(basename "$entry")"
+        case "$base" in
+            mu-plugins|plugins|themes|uploads) ;;
+            *)
+                log "  Carrying forward content/$base"
+                rm -rf "${STAGING_PATH:?}/content/${base:?}"
+                cp -a "$entry" "$STAGING_PATH/content/$base"
+                ;;
+        esac
+    done < <(find "$CURRENT_TARGET/content" -mindepth 1 -maxdepth 1)
+fi
+
+# --- Fix the uploads symlink. Build-time (on the runner) it pointed at
+# a relative path that doesn't exist there — correct it now with the
+# real production location.
+rm -f "$STAGING_PATH/content/uploads"
+ln -s "$SITE_DIR/shared/uploads" "$STAGING_PATH/content/uploads"
+
+# --- Safety backup, immediately before the swap ---
+log "Taking a pre-deploy backup..."
+backup-sites "$SITE_NAME" || log "WARNING: pre-deploy backup failed — proceeding anyway"
+
+# --- Move into releases/ and swap current ---
+NEW_TS="$(date +%s)"
+NEW_RELEASE="$SITE_DIR/releases/$NEW_TS"
+log "Moving staged build into $NEW_RELEASE..."
+mkdir -p "$SITE_DIR/releases"
+mv "$STAGING_PATH" "$NEW_RELEASE"
+chown -R "$SITE_USER":"$SITE_USER" "$NEW_RELEASE"
+
+# bin/ must never go live — it only needed to exist in the staged build
+# so this very script could be invoked from within it. Safe to remove
+# now even though it's the directory this script is currently running
+# from; Linux keeps the file's inode alive for the running process
+# until it exits.
+log "Removing bin/ from the release — it must not go live..."
+rm -rf "${NEW_RELEASE:?}/bin"
+
+# Keep only this environment's config file, not every environment's
+# config that happens to be in the repo.
+log "Pruning config/ to $ENVIRONMENT-relevant files only..."
+if [ -d "$NEW_RELEASE/config" ]; then
+    while IFS= read -r entry; do
+        base="$(basename "$entry")"
+        case "$base" in
+            "$ENVIRONMENT-config.php"|global-config.php) ;;
+            *)
+                log "  Removing config/$base (not used in $ENVIRONMENT)"
+                rm -rf "$entry"
+                ;;
+        esac
+    done < <(find "$NEW_RELEASE/config" -mindepth 1 -maxdepth 1)
+fi
+
+# Repo/build-management artifacts — not needed for the site to run
+log "Removing repo artifacts not needed at runtime..."
+rm -rf "$NEW_RELEASE/composer.json" "$NEW_RELEASE/composer.lock" \
+       "$NEW_RELEASE/.github" "$NEW_RELEASE/.gitignore"
+
+if [ ! -f "$NEW_RELEASE/public/wp-config.php" ]; then
+    log "ERROR: new release is missing public/wp-config.php — NOT activating."
+    log "Broken release left at $NEW_RELEASE for inspection; live site is untouched."
+    exit 1
+fi
+
+activate-release "$SITE_NAME" "$NEW_TS"
+
+# --- Prune old releases, keep the most recent N ---
+log "Pruning old releases, keeping the $KEEP_RELEASES most recent..."
+ls -t "$SITE_DIR/releases" | tail -n +$((KEEP_RELEASES + 1)) | while read -r old; do
+    log "  Removing old release: $old"
+    rm -rf "${SITE_DIR:?}/releases/${old:?}"
+done
+
+log "Deploy complete for $SITE_NAME -> $NEW_RELEASE"
