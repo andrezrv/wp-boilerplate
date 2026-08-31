@@ -1,9 +1,8 @@
 name: Deploy
 
 on:
-  # Uncomment to deploy on push to main.
-  # push:
-  #  branches: [main]
+  push:
+    branches: [main]
   workflow_dispatch:
 
 jobs:
