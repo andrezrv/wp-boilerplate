@@ -18,7 +18,7 @@
  * Author URI:        https://andrezrv.com/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
- * Text Domain:       av-generate-blog-themecustomizer
+ * Text Domain:       andrezrv-custom-features
  * Domain Path:       /
  */
 

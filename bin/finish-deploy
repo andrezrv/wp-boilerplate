@@ -51,7 +51,25 @@ if [ -d "$CURRENT_TARGET/content" ]; then
     while IFS= read -r entry; do
         base="$(basename "$entry")"
         case "$base" in
-            mu-plugins|plugins|themes|uploads) ;;
+            mu-plugins|uploads|managed)
+                # mu-plugins: comes from git; uploads: symlink fixed below;
+                # managed: comes fresh from this deploy (Composer-managed).
+                ;;
+            plugins|themes)
+                # Carry forward only manually installed entries (non-symlinks).
+                # Symlinks in these directories were created by post-install and
+                # point into managed/ — the new release has fresh ones already.
+                if [ -d "$CURRENT_TARGET/content/$base" ]; then
+                    while IFS= read -r item; do
+                        item_base="$(basename "$item")"
+                        target="$STAGING_PATH/content/$base/$item_base"
+                        if [ ! -L "$item" ] && [ ! -e "$target" ]; then
+                            log "  Carrying forward manual $base/$item_base"
+                            cp -a "$item" "$target"
+                        fi
+                    done < <(find "$CURRENT_TARGET/content/$base" -mindepth 1 -maxdepth 1)
+                fi
+                ;;
             *)
                 log "  Carrying forward content/$base"
                 rm -rf "${STAGING_PATH:?}/content/${base:?}"

@@ -45,4 +45,46 @@ ln -sfn "../assets/favicons/favicon.ico" "$PUBLIC_DIR/favicon.ico"
 rm -f "$PUBLIC_DIR/favicon.svg"
 ln -sfn "../assets/favicons/favicon.svg" "$PUBLIC_DIR/favicon.svg"
 
+# Sync managed plugins/themes into the live plugins/themes directories.
+# Managed entries (installed by Composer into content/managed/) are symlinked
+# into content/plugins/ and content/themes/ so WordPress finds them normally.
+# Manually installed plugins/themes sit alongside the symlinks and are never touched.
+mkdir -p "$PROJECT_ROOT/content/managed/plugins" \
+         "$PROJECT_ROOT/content/managed/themes" \
+         "$PROJECT_ROOT/content/plugins" \
+         "$PROJECT_ROOT/content/themes"
+
+for managed in "$PROJECT_ROOT/content/managed/plugins"/*/; do
+    [ -d "$managed" ] || continue
+    name="$(basename "$managed")"
+    link="$PROJECT_ROOT/content/plugins/$name"
+    # Only create/refresh the symlink if the slot is empty or already a symlink.
+    # A real directory there is a manual install with a name collision — leave it alone.
+    if [ -L "$link" ] || [ ! -e "$link" ]; then
+        ln -sfn "../managed/plugins/$name" "$link"
+    fi
+done
+
+for managed in "$PROJECT_ROOT/content/managed/themes"/*/; do
+    [ -d "$managed" ] || continue
+    name="$(basename "$managed")"
+    link="$PROJECT_ROOT/content/themes/$name"
+    if [ -L "$link" ] || [ ! -e "$link" ]; then
+        ln -sfn "../managed/themes/$name" "$link"
+    fi
+done
+
+# Remove dangling symlinks left behind by packages removed from composer.json.
+for link in "$PROJECT_ROOT/content/plugins"/*/; do
+    if [ -L "$link" ] && [ ! -e "$link" ]; then
+        rm "$link"
+    fi
+done
+
+for link in "$PROJECT_ROOT/content/themes"/*/; do
+    if [ -L "$link" ] && [ ! -e "$link" ]; then
+        rm "$link"
+    fi
+done
+
 echo "post-composer-install: symlinks rebuilt"
