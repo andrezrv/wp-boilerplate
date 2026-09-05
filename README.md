@@ -176,7 +176,6 @@ These scripts live permanently on the server and are not part of this repository
 | `backup-sites` | Daily backup (database + files), plus manual/on-demand runs |
 | `restore-site` | Full restore from a backup |
 | `activate-release` | Shared logic for making a release live |
-| `rollback-release` | Interactive — lists releases still on disk and lets you pick one to switch back to |
 
 ## Scheduled deploys and keep-alive
 
