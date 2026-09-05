@@ -126,6 +126,19 @@ log "Removing repo artifacts not needed at runtime..."
 rm -rf "$NEW_RELEASE/composer.json" "$NEW_RELEASE/composer.lock" \
        "$NEW_RELEASE/.github" "$NEW_RELEASE/.gitignore"
 
+# Ensure shared/secrets.php exists; generate on first deploy if absent.
+if [ ! -f "$SITE_DIR/shared/secrets.php" ]; then
+    log "Generating shared/secrets.php from WordPress secret key API..."
+    { printf '<?php\n'; curl -s https://api.wordpress.org/secret-key/1.1/salt/; } \
+        > "$SITE_DIR/shared/secrets.php"
+    chown "$SITE_USER":"$SITE_USER" "$SITE_DIR/shared/secrets.php"
+    chmod 600 "$SITE_DIR/shared/secrets.php"
+    log "shared/secrets.php created."
+fi
+
+# Symlink secrets.php into the release (config/ was already pruned above).
+ln -sfn "$SITE_DIR/shared/secrets.php" "$NEW_RELEASE/config/secrets.php"
+
 if [ ! -f "$NEW_RELEASE/wp-config.php" ]; then
     log "ERROR: new release is missing wp-config.php — NOT activating."
     log "Broken release left at $NEW_RELEASE for inspection; live site is untouched."

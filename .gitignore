@@ -3,6 +3,7 @@
 !.env*.sample
 bin/*.conf
 composer.lock
+config/secrets.php
 content/*
 !content/index.php
 !content/mu-plugins/

@@ -87,6 +87,14 @@ done < <(find "$PROJECT_ROOT/content/themes" -maxdepth 1 -type l)
 
 echo "post-composer-install: symlinks rebuilt"
 
+# Generate config/secrets.php if it doesn't exist yet.
+if [ ! -f "$PROJECT_ROOT/config/secrets.php" ]; then
+    echo "Generating config/secrets.php from WordPress secret key API..."
+    { printf '<?php\n'; curl -s https://api.wordpress.org/secret-key/1.1/salt/; } \
+        > "$PROJECT_ROOT/config/secrets.php"
+    echo "config/secrets.php created."
+fi
+
 # Install git hooks if CaptainHook is available (dev-only dependency).
 if [ -f "$PROJECT_ROOT/vendor/bin/captainhook" ]; then
     "$PROJECT_ROOT/vendor/bin/captainhook" install --run-mode=force --only-enabled -q 2>/dev/null || true

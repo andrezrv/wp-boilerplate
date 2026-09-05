@@ -72,17 +72,7 @@ define( 'WP_CACHE', boolval( $_ENV['WP_CACHE'] ?? false ) );
  *
  * @link https://api.wordpress.org/secret-key/1.1/salt/
  */
-// phpcs:disable WordPress.Security.ValidatedSanitizedInput
-define( 'AUTH_KEY', $_ENV['AUTH_KEY'] );
-define( 'SECURE_AUTH_KEY', $_ENV['SECURE_AUTH_KEY'] );
-define( 'LOGGED_IN_KEY', $_ENV['LOGGED_IN_KEY'] );
-define( 'NONCE_KEY', $_ENV['NONCE_KEY'] );
-define( 'AUTH_SALT', $_ENV['AUTH_SALT'] );
-define( 'SECURE_AUTH_SALT', $_ENV['SECURE_AUTH_SALT'] );
-define( 'LOGGED_IN_SALT', $_ENV['LOGGED_IN_SALT'] );
-define( 'NONCE_SALT', $_ENV['NONCE_SALT'] );
-define( 'WP_CACHE_KEY_SALT', $_ENV['WP_CACHE_KEY_SALT'] );
-// phpcs:enable WordPress.Security.ValidatedSanitizedInput
+require_once APPLICATION_PATH . '/config/secrets.php';
 
 /** WordPress database table prefix. */
 $table_prefix = $_ENV['DB_PREFIX'] ?? 'wp_'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited,WordPress.Security.ValidatedSanitizedInput
