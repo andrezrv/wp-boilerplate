@@ -126,8 +126,8 @@ log "Removing repo artifacts not needed at runtime..."
 rm -rf "$NEW_RELEASE/composer.json" "$NEW_RELEASE/composer.lock" \
        "$NEW_RELEASE/.github" "$NEW_RELEASE/.gitignore"
 
-if [ ! -f "$NEW_RELEASE/public/wp-config.php" ]; then
-    log "ERROR: new release is missing public/wp-config.php — NOT activating."
+if [ ! -f "$NEW_RELEASE/wp-config.php" ]; then
+    log "ERROR: new release is missing wp-config.php — NOT activating."
     log "Broken release left at $NEW_RELEASE for inspection; live site is untouched."
     exit 1
 fi
