@@ -7,6 +7,6 @@ content/*
 !content/mu-plugins/
 node_modules/
 public/*
-!public/wp-config.php
+!public/.gitkeep
 vendor/
 yarn.lock

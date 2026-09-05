@@ -1,10 +1,10 @@
 <?php
 /** Load deployable config file. */
-require __DIR__ . '/../config/global-config.php';
+require __DIR__ . '/config/global-config.php';
 
 /** Absolute path to the WordPress directory. */
 if ( ! \defined( 'ABSPATH' ) ) {
-	\define( 'ABSPATH', __DIR__ . '/' );
+	\define( 'ABSPATH', __DIR__ . '/public/' );
 }
 
 /** Sets up WordPress vars and included files. */
