@@ -85,7 +85,7 @@ define( 'WP_CACHE_KEY_SALT', $_ENV['WP_CACHE_KEY_SALT'] );
 // phpcs:enable WordPress.Security.ValidatedSanitizedInput
 
 /** WordPress database table prefix. */
-$table_prefix = 'hskap4rf_'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
+$table_prefix = $_ENV['DB_PREFIX'] ?? 'wp_'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited,WordPress.Security.ValidatedSanitizedInput
 
 /** Load all bootstrap files. */
 andrezrv\utils\bootstrap();

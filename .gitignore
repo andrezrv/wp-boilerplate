@@ -1,5 +1,6 @@
 .DS_Store
 .env*
+!.env*.sample
 bin/*.conf
 composer.lock
 content/*
