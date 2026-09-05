@@ -167,15 +167,9 @@ Set these in the repository's **Settings → Secrets and variables → Actions**
 
 If your `composer.json` references private repositories (e.g. premium plugins hosted on GitHub), add a separate SSH key secret for each one and load them in a dedicated SSH agent step before `composer update` runs — then replace that agent with a fresh one carrying only `DEPLOY_SSH_KEY` before connecting to the server. This avoids offering the wrong keys to the production server and hitting its `MaxAuthTries` limit.
 
-## Server-side scripts
+## Server-side tools
 
-These scripts live permanently on the server and are not part of this repository:
-
-| Script | Purpose |
-|---|---|
-| `backup-sites` | Daily backup (database + files), plus manual/on-demand runs |
-| `restore-site` | Full restore from a backup |
-| `activate-release` | Shared logic for making a release live |
+Provisioning, post-deployment tasks, and database management are handled by a dedicated server-tools project, which lives outside this repository.
 
 ## Scheduled deploys and keep-alive
 
