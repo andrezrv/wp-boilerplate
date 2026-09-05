@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+EXIT=0
+
+STAGED_PHP=$(git diff --cached --name-only --diff-filter=ACM | grep '\.php$' || true)
+STAGED_JS=$(git diff --cached --name-only --diff-filter=ACM | grep '\.js$' || true)
+
+if [ -n "$STAGED_PHP" ]; then
+    if [ ! -f "vendor/bin/phpcbf" ]; then
+        echo "phpcbf not found — run 'composer install' to set up dev tools." >&2
+        exit 1
+    fi
+    echo "Auto-fixing PHP coding standards..."
+    # phpcbf exits 1 when it makes fixes, 0 when nothing needed fixing — both are fine here.
+    # shellcheck disable=SC2086
+    vendor/bin/phpcbf $STAGED_PHP || true
+    # Re-stage files phpcbf may have modified.
+    # shellcheck disable=SC2086
+    git add $STAGED_PHP
+
+    echo "Checking remaining PHP coding standards..."
+    # shellcheck disable=SC2086
+    vendor/bin/phpcs $STAGED_PHP || EXIT=$?
+fi
+
+if [ -n "$STAGED_JS" ]; then
+    if [ ! -f "node_modules/.bin/eslint" ]; then
+        echo "eslint not found — run 'yarn install' to set up dev tools." >&2
+        exit 1
+    fi
+    echo "Checking JS coding standards..."
+    # shellcheck disable=SC2086
+    node_modules/.bin/eslint $STAGED_JS || EXIT=$?
+fi
+
+exit $EXIT

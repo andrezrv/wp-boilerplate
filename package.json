@@ -3,6 +3,9 @@
     "private": true,
     "scripts": {
         ":help": "bin/help",
+        "build": "rm -f composer.lock && composer update",
+        "lint": "vendor/bin/phpcs bootstrap/ config/ content/mu-plugins/ utils/",
+        "fix": "vendor/bin/phpcbf bootstrap/ config/ content/mu-plugins/ utils/",
         "backup": "bin/backup-site",
         "backup:db": "bin/backup-site --db-only",
         "backup:files": "bin/backup-site --files-only",
