@@ -121,10 +121,16 @@ if [ -d "$NEW_RELEASE/config" ]; then
     done < <(find "$NEW_RELEASE/config" -mindepth 1 -maxdepth 1)
 fi
 
-# Repo/build-management artifacts — not needed for the site to run
+# Repo/build-management artifacts and dev tooling — not needed for the site to run
 log "Removing repo artifacts not needed at runtime..."
 rm -rf "$NEW_RELEASE/composer.json" "$NEW_RELEASE/composer.lock" \
-       "$NEW_RELEASE/.github" "$NEW_RELEASE/.gitignore"
+       "$NEW_RELEASE/.github" "$NEW_RELEASE/.gitignore" \
+       "$NEW_RELEASE/phpcs.xml.dist" "$NEW_RELEASE/captainhook.json" \
+       "$NEW_RELEASE/CLAUDE.md" "$NEW_RELEASE/.claude" \
+       "$NEW_RELEASE/package.json" "$NEW_RELEASE/yarn.lock" \
+       "$NEW_RELEASE/node_modules" \
+       "$NEW_RELEASE/LICENSE" "$NEW_RELEASE/README.md"
+find "$NEW_RELEASE" -maxdepth 1 -name '.env*.sample' -delete
 
 # Carry secrets.php forward from the active release; generate only on first deploy.
 if [ -f "$CURRENT_TARGET/config/secrets.php" ]; then
