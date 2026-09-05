@@ -36,7 +36,7 @@ use function andrezrv\custom_features\make_custom_feature;
 		$feature->set_callback(
 			'posts_columns_id',
 			function ( array $columns ): array {
-				$new_columns = array();
+				$new_columns = [];
 
 				foreach ( $columns as $key => $value ) {
 					$new_columns[ $key ] = $value;

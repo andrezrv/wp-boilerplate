@@ -52,7 +52,7 @@ function find_file( string $start_dir, string $filename, int $max_levels = 1 ): 
 		$current_dir = $parent_dir;
 	}
 
-	return false; // File not found within x levels.
+	return false; // File wasn't found within x levels.
 }
 
 /**
@@ -61,7 +61,7 @@ function find_file( string $start_dir, string $filename, int $max_levels = 1 ): 
  * @return void
  */
 function load_env(): void {
-	foreach ( array( 'local', 'development', 'qa', 'staging', 'production' ) as $stage ) {
+	foreach ( [ 'local', 'development', 'qa', 'staging', 'production' ] as $stage ) {
 		$env_stage_file = find_file( APPLICATION_PATH, '.env.' . $stage, 3 );
 
 		if ( $env_stage_file ) {
@@ -107,13 +107,14 @@ function load_env_config(): void {
  * @return string
  */
 function get_real_site_url(): string {
-	$host = isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
+	$host = $_SERVER['HTTP_HOST'] ?? ''; // phpcs:ignore
+
 	if ( ! $host ) {
 		return '';
 	}
 
 	// Dynamically detect the current protocol.
-	$https         = isset( $_SERVER['HTTPS'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTPS'] ) ) : '';
+	$https         = $_SERVER['HTTPS'] ?? ''; // phpcs:ignore
 	$site_protocol = ( 'on' === $https ) ? 'https://' : 'http://';
 
 	return $site_protocol . $host;

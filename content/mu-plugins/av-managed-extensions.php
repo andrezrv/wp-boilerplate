@@ -119,13 +119,13 @@ use function andrezrv\custom_features\make_custom_feature;
 				// phpcs:disable WordPress.Security.NonceVerification -- defensive redirect; WP core enforces nonces before deletion proceeds.
 				$action = sanitize_key( $_GET['action'] ?? $_POST['action'] ?? '' );
 
-				if ( ! in_array( $action, array( 'delete-selected', 'delete', 'delete-plugin' ), true ) ) {
+				if ( ! in_array( $action, [ 'delete-selected', 'delete', 'delete-plugin' ], true ) ) {
 					return;
 				}
 
 				// phpcs:ignore Squiz.PHP.CommentedOutCode.Found -- explanatory comment, not commented-out code.
 				// Single-plugin delete uses ?plugin= (GET) or $_POST['slug'] (AJAX); bulk uses ?checked[]= (GET).
-				$candidates = array();
+				$candidates = [];
 				if ( isset( $_GET['plugin'] ) ) {
 					$candidates[] = sanitize_text_field( wp_unslash( $_GET['plugin'] ) );
 				}
@@ -143,7 +143,7 @@ use function andrezrv\custom_features\make_custom_feature;
 					if ( $is_managed_plugin( $plugin_file ) ) {
 						if ( wp_doing_ajax() ) {
 							wp_send_json_error(
-								array( 'message' => __( 'That plugin is managed via Composer and cannot be deleted from the WordPress admin. Remove it from composer.json instead.', 'andrezrv-custom-features' ) )
+								[ 'message' => __( 'That plugin is managed via Composer and cannot be deleted from the WordPress admin. Remove it from composer.json instead.', 'andrezrv-custom-features' ) ]
 							);
 						}
 						wp_safe_redirect( admin_url( 'plugins.php?av_managed_delete_error=1' ) );
@@ -198,12 +198,12 @@ use function andrezrv\custom_features\make_custom_feature;
 				if ( $is_managed_theme( $stylesheet ) ) {
 					$message = __( 'This theme is managed via Composer and cannot be deleted from the WordPress admin. Remove it from composer.json instead.', 'andrezrv-custom-features' );
 					if ( wp_doing_ajax() ) {
-						wp_send_json_error( array( 'message' => $message ) );
+						wp_send_json_error( [ 'message' => $message ] );
 					}
 					wp_die(
 						esc_html( $message ),
 						esc_html__( 'Managed Theme', 'andrezrv-custom-features' ),
-						array( 'back_link' => true )
+						[ 'back_link' => true ]
 					);
 				}
 			}

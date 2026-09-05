@@ -11,7 +11,7 @@
  */
 
 ( function () {
-	$files = array();
+	$files = [];
 
 	foreach ( \glob( __DIR__ . '/av-custom-features/src/*.php' ) as $filename ) {
 		$files[] = $filename;

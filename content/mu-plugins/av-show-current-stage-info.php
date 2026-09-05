@@ -39,12 +39,12 @@ use function andrezrv\custom_features\make_custom_feature;
 			'admin_bar_menu',
 			function ( $wp_admin_bar ) {
 				$env  = \ucfirst( \wp_get_environment_type() );
-				$args = array(
+				$args = [
 					'id'     => 'current-stage',
 					'title'  => \sprintf( '%s Current Stage: %s', '<span class="dashicons dashicons-admin-site dashicons-before" style="padding: 7px 0; box-sizing: border-box;"></span>', $env ),
-					'meta'   => array( 'class' => 'current-stage' ),
+					'meta'   => [ 'class' => 'current-stage' ],
 					'parent' => 'top-secondary',
-				);
+				];
 
 				$wp_admin_bar->add_node( $args );
 			}

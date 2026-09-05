@@ -28,12 +28,12 @@ add_action(
 		$is_local_env       = 'local' === \wp_get_environment_type();
 		$allows_local_email = ! defined( 'WP_MAIL_LOCAL' ) || WP_MAIL_LOCAL;
 
-		$disable_features = array(
+		$disable_features = [
 			'wp_mail_override'                => fn() => ! $is_local_env || $allows_local_email,
 			'recover_default_theme_directory' => fn() => ! $is_local_env,
 			'remove_query_args_from_assets'   => fn() => ! $is_local_env,
 			'deactivate_plugins'              => fn() => ! $is_local_env,
-		);
+		];
 
 		foreach ( $disable_features as $feature => $callback ) {
 			if ( $callback() ) {

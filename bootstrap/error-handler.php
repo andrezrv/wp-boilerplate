@@ -23,7 +23,7 @@ use JetBrains\PhpStorm\NoReturn;
 		 *
 		 * @var array|string[]
 		 */
-		private static array $supported_error_types = array(
+		private static array $supported_error_types = [
 			E_NOTICE            => 'E_NOTICE',
 			E_WARNING           => 'E_WARNING',
 			E_DEPRECATED        => 'E_DEPRECATED',
@@ -32,14 +32,14 @@ use JetBrains\PhpStorm\NoReturn;
 			E_USER_WARNING      => 'E_USER_WARNING',
 			E_USER_DEPRECATED   => 'E_USER_DEPRECATED',
 			E_RECOVERABLE_ERROR => 'E_RECOVERABLE_ERROR',
-		);
+		];
 
 		/**
 		 * Paths to be ignored in case errors are triggered within them.
 		 *
 		 * @var array
 		 */
-		private array $ignored_paths = array();
+		private array $ignored_paths = [];
 
 		/**
 		 * Basic constructor.
@@ -58,12 +58,12 @@ use JetBrains\PhpStorm\NoReturn;
 		 * @return void
 		 */
 		private function initialize_ignored_paths(): void {
-			$this->ignored_paths = array(
+			$this->ignored_paths = [
 				// Just a sample — please don't use this path.
 				// phpcs:disable Squiz.Commenting.InlineComment.InvalidEndChar
 				// WP_CONTENT_DIR . '/mu-plugins/my-plugin/',
 				// phpcs:enable Squiz.Commenting.InlineComment.InvalidEndChar
-			);
+			];
 		}
 
 		/**
@@ -75,10 +75,10 @@ use JetBrains\PhpStorm\NoReturn;
 		 */
 		public function set_custom_wp_debug_mode(): self {
 			// phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
-			$GLOBALS['wp_filter'] = array(
-				'enable_wp_debug_mode_checks' => array(
-					10 => array(
-						array(
+			$GLOBALS['wp_filter'] = [
+				'enable_wp_debug_mode_checks' => [
+					10 => [
+						[
 							'accepted_args' => 0,
 							'function'      => function () {
 								// Set up custom debugging behavior.
@@ -87,10 +87,10 @@ use JetBrains\PhpStorm\NoReturn;
 								// Disable default behavior.
 								return false;
 							},
-						),
-					),
-				),
-			);
+						],
+					],
+				],
+			];
 
 			return $this;
 		}
@@ -116,7 +116,7 @@ use JetBrains\PhpStorm\NoReturn;
 					ini_set( 'display_errors', 0 ); // phpcs:ignore WordPress.PHP.IniSet.display_errors_Disallowed
 				}
 
-				if ( in_array( strtolower( (string) WP_DEBUG_LOG ), array( 'true', '1' ), true ) ) {
+				if ( in_array( strtolower( (string) WP_DEBUG_LOG ), [ 'true', '1' ], true ) ) {
 					$log_path = WP_CONTENT_DIR . '/debug.log';
 				} elseif ( is_string( WP_DEBUG_LOG ) ) {
 					$log_path = WP_DEBUG_LOG;

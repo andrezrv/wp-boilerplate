@@ -21,7 +21,7 @@ class Custom_Feature_Manager {
 	 *
 	 * @var array
 	 */
-	protected array $features = array();
+	protected array $features = [];
 
 	/**
 	 * The hook to use to add features.
