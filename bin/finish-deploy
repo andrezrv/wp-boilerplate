@@ -87,7 +87,7 @@ ln -s "$SITE_DIR/shared/uploads" "$STAGING_PATH/content/uploads"
 
 # --- Safety backup, immediately before the swap ---
 log "Taking a pre-deploy backup..."
-backup-sites "$SITE_NAME" || log "WARNING: pre-deploy backup failed — proceeding anyway"
+wps backup "$SITE_NAME" || log "WARNING: pre-deploy backup failed — proceeding anyway"
 
 # --- Move into releases/ and swap current ---
 NEW_TS="$(date +%s)"
@@ -132,7 +132,7 @@ if [ ! -f "$NEW_RELEASE/wp-config.php" ]; then
     exit 1
 fi
 
-activate-release "$SITE_NAME" "$NEW_TS"
+wps release:activate "$SITE_NAME" "$NEW_TS"
 
 # --- Prune old releases, keep the most recent N ---
 log "Pruning old releases, keeping the $KEEP_RELEASES most recent..."
