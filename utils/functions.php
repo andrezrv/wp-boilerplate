@@ -37,7 +37,7 @@ function find_file( string $start_dir, string $filename, int $max_levels = 1 ): 
 	for ( $i = 0; $i <= $max_levels; $i++ ) {
 		$filepath = $current_dir . DIRECTORY_SEPARATOR . $filename;
 
-		if ( file_exists( $filepath ) ) {
+		if ( is_readable( $filepath ) ) {
 			return realpath( $filepath );
 		}
 
