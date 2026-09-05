@@ -126,18 +126,18 @@ log "Removing repo artifacts not needed at runtime..."
 rm -rf "$NEW_RELEASE/composer.json" "$NEW_RELEASE/composer.lock" \
        "$NEW_RELEASE/.github" "$NEW_RELEASE/.gitignore"
 
-# Ensure shared/secrets.php exists; generate on first deploy if absent.
-if [ ! -f "$SITE_DIR/shared/secrets.php" ]; then
-    log "Generating shared/secrets.php from WordPress secret key API..."
+# Carry secrets.php forward from the active release; generate only on first deploy.
+if [ -f "$CURRENT_TARGET/config/secrets.php" ]; then
+    log "Copying secrets.php from current release..."
+    cp "$CURRENT_TARGET/config/secrets.php" "$NEW_RELEASE/config/secrets.php"
+else
+    log "Generating secrets.php from WordPress secret key API (first deploy)..."
     { printf '<?php\n'; curl -s https://api.wordpress.org/secret-key/1.1/salt/; } \
-        > "$SITE_DIR/shared/secrets.php"
-    chown "$SITE_USER":"$SITE_USER" "$SITE_DIR/shared/secrets.php"
-    chmod 600 "$SITE_DIR/shared/secrets.php"
-    log "shared/secrets.php created."
+        > "$NEW_RELEASE/config/secrets.php"
+    log "secrets.php created."
 fi
-
-# Symlink secrets.php into the release (config/ was already pruned above).
-ln -sfn "$SITE_DIR/shared/secrets.php" "$NEW_RELEASE/config/secrets.php"
+chown "$SITE_USER":"$SITE_USER" "$NEW_RELEASE/config/secrets.php"
+chmod 600 "$NEW_RELEASE/config/secrets.php"
 
 if [ ! -f "$NEW_RELEASE/wp-config.php" ]; then
     log "ERROR: new release is missing wp-config.php — NOT activating."
