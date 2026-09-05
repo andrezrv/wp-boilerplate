@@ -7,6 +7,7 @@
  *
  * @package andrezrv\custom_features
  */
+
 namespace andrezrv\custom_features;
 
 /**
@@ -20,14 +21,14 @@ class Custom_Feature_Manager {
 	 *
 	 * @var array
 	 */
-	protected array $features = [];
+	protected array $features = array();
 
 	/**
 	 * The hook to use to add features.
 	 *
 	 * @var string
 	 */
-	static string $hook = 'andrezrv/custom_features_init';
+	public static string $hook = 'andrezrv/custom_features_init';
 
 	/**
 	 * Initialize the custom feature manager.
@@ -50,12 +51,11 @@ class Custom_Feature_Manager {
 	 * disabled programmatically.
 	 *
 	 * @param string   $feature  The feature name.
-	 * @param callable $callback The callback function.
+	 * @param callable $callback The callback function to run if enabled.
 	 *
 	 * @return callable
 	 */
 	public function run( string $feature, callable $callback ): callable {
-//		\var_dump( $this ); die();
 		if ( ! $this->is_feature_enabled( $feature ) ) {
 			return fn() => null;
 		}
@@ -66,8 +66,8 @@ class Custom_Feature_Manager {
 	/**
 	 * Add a feature to the list.
 	 *
-	 * @param string $feature
-	 * @param bool   $status
+	 * @param string $feature The feature name.
+	 * @param bool   $status  Whether the feature is enabled.
 	 *
 	 * @return void
 	 */
@@ -82,7 +82,7 @@ class Custom_Feature_Manager {
 	/**
 	 * Check if a feature is enabled.
 	 *
-	 * @param string $feature
+	 * @param string $feature The feature name.
 	 *
 	 * @return bool
 	 */
@@ -93,7 +93,7 @@ class Custom_Feature_Manager {
 	/**
 	 * Enable a feature.
 	 *
-	 * @param string $feature
+	 * @param string $feature The feature name.
 	 *
 	 * @return void
 	 */
@@ -104,12 +104,11 @@ class Custom_Feature_Manager {
 	/**
 	 * Disable a feature.
 	 *
-	 * @param string $feature
+	 * @param string $feature The feature name.
 	 *
 	 * @return void
 	 */
 	public function disable_feature( string $feature ): void {
 		$this->features[ $feature ] = false;
 	}
-
 }

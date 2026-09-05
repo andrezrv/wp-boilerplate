@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Remove GeneratePress Live Preview Customizer script.
  *
@@ -24,26 +23,33 @@
 
 use function andrezrv\custom_features\make_custom_feature;
 
-\add_action( 'muplugins_loaded', function () {
-	/**
-	 * Create a custom feature.
-	 */
-	$feature = make_custom_feature( 'disable_generatepress_customizer_live_preview' );
+\add_action(
+	'muplugins_loaded',
+	function () {
+		/**
+		 * Create a custom feature.
+		 */
+		$feature = make_custom_feature( 'disable_generatepress_customizer_live_preview' );
 
-	/**
-	 * Remove the attempt to queue the GeneratePress Live Preview Customizer
-	 * script by replacing it with an empty pluggable function.
-	 */
-	$feature->set_callback( 'generate_blog_customizer_live_preview', function () {
-		if ( ! \function_exists( 'generate_blog_customizer_live_preview' ) ) {
-			function generate_blog_customizer_live_preview() {}
-		}
-	} );
+		/**
+		 * Remove the attempt to queue the GeneratePress Live Preview Customizer
+		 * script by replacing it with an empty pluggable function.
+		 */
+		$feature->set_callback(
+			'generate_blog_customizer_live_preview',
+			function () {
+				if ( ! \function_exists( 'generate_blog_customizer_live_preview' ) ) {
+					/**
+					 * Stub that prevents the live preview fatal error.
+					 */
+					function generate_blog_customizer_live_preview() {}
+				}
+			}
+		);
 
-	/**
-	 * Add the feature to the plugin.
-	 */
-	add_action( 'muplugins_loaded', $feature->callback( 'generate_blog_customizer_live_preview' ), 20 );
-} );
-
-
+		/**
+		 * Add the feature to the plugin.
+		 */
+		add_action( 'muplugins_loaded', $feature->callback( 'generate_blog_customizer_live_preview' ), 20 );
+	}
+);

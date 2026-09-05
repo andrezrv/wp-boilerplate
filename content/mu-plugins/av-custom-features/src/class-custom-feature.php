@@ -39,7 +39,7 @@ class Custom_Feature {
 	 *
 	 * @var array $callbacks
 	 */
-	protected array $callbacks = [];
+	protected array $callbacks = array();
 
 	/**
 	 * Constructor for the Custom_Feature class.

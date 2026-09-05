@@ -6,19 +6,21 @@
  * Author: Andrés Villarreal
  * Author URI: https://andrezrv.com/
  * License: GPL2+
+ *
+ * @package andrezrv\muplugins
  */
 
 ( function () {
-	$files = [];
+	$files = array();
 
 	foreach ( \glob( __DIR__ . '/av-custom-features/src/*.php' ) as $filename ) {
 		$files[] = $filename;
-		unset( $filename ); // Avoid reference pollution
+		unset( $filename ); // Avoid reference pollution.
 	}
 
 	foreach ( \glob( __DIR__ . '/av-custom-features/app/*.php' ) as $filename ) {
 		$files[] = $filename;
-		unset( $filename ); // Avoid reference pollution
+		unset( $filename ); // Avoid reference pollution.
 	}
 
 	foreach ( $files as $file ) {

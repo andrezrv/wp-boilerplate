@@ -11,6 +11,9 @@
  * environment variables, per-environment configuration (via
  * config/local-config.php, config/production-config.php, etc.), sets up
  * WordPress database settings, and fires up the application bootstrap files.
+ *
+ * @author  Andrés Villarreal <me@andrezrv.com>
+ * @package andrezrv
  */
 
 /** The path to the application root. */
@@ -20,31 +23,31 @@ define( 'APPLICATION_PATH', realpath( __DIR__ . '/..' ) );
 require_once APPLICATION_PATH . '/utils/functions.php';
 
 /** Load Composer's autoloader. */
-your_project\utils\setup_autoload();
+andrezrv\utils\setup_autoload();
 
 /** Load environment variables. */
-your_project\utils\load_env();
+andrezrv\utils\load_env();
 
 /** Load configuration by environment. */
-your_project\utils\load_env_config();
+andrezrv\utils\load_env_config();
 
 /** The name of the database for WordPress */
-define( 'DB_NAME', $_ENV['DB_NAME'] );
+define( 'DB_NAME', $_ENV['DB_NAME'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 
 /** Database username */
-define( 'DB_USER', $_ENV['DB_USER'] );
+define( 'DB_USER', $_ENV['DB_USER'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 
 /** Database password */
-define( 'DB_PASSWORD', $_ENV['DB_PASSWORD'] );
+define( 'DB_PASSWORD', $_ENV['DB_PASSWORD'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 
 /** Database hostname */
-define( 'DB_HOST', $_ENV['DB_HOST'] );
+define( 'DB_HOST', $_ENV['DB_HOST'] ); // phpcs:ignore WordPress.Security.ValidatedSanitizedInput
 
 /** Set the directory path. */
 define( 'WP_CONTENT_DIR', realpath( __DIR__ . '/../content' ) );
 
 /** Set the URL path dynamically based on the current domain. */
-define( 'WP_CONTENT_URL', your_project\utils\get_real_site_url() . '/content' );
+define( 'WP_CONTENT_URL', andrezrv\utils\get_real_site_url() . '/content' );
 
 /** Set the uploads directory. */
 define( 'UPLOADS', 'content/uploads' );
@@ -69,6 +72,7 @@ define( 'WP_CACHE', boolval( $_ENV['WP_CACHE'] ?? false ) );
  *
  * @link https://api.wordpress.org/secret-key/1.1/salt/
  */
+// phpcs:disable WordPress.Security.ValidatedSanitizedInput
 define( 'AUTH_KEY', $_ENV['AUTH_KEY'] );
 define( 'SECURE_AUTH_KEY', $_ENV['SECURE_AUTH_KEY'] );
 define( 'LOGGED_IN_KEY', $_ENV['LOGGED_IN_KEY'] );
@@ -78,9 +82,10 @@ define( 'SECURE_AUTH_SALT', $_ENV['SECURE_AUTH_SALT'] );
 define( 'LOGGED_IN_SALT', $_ENV['LOGGED_IN_SALT'] );
 define( 'NONCE_SALT', $_ENV['NONCE_SALT'] );
 define( 'WP_CACHE_KEY_SALT', $_ENV['WP_CACHE_KEY_SALT'] );
+// phpcs:enable WordPress.Security.ValidatedSanitizedInput
 
 /** WordPress database table prefix. */
-$table_prefix = 'wp_';
+$table_prefix = 'hskap4rf_'; // phpcs:ignore WordPress.WP.GlobalVariablesOverride.Prohibited
 
 /** Load all bootstrap files. */
-your_project\utils\bootstrap();
+andrezrv\utils\bootstrap();

@@ -22,31 +22,37 @@
 
 use function andrezrv\custom_features\make_custom_feature;
 
-\add_action( 'muplugins_loaded', function () {
-	/**
-	 * Create a custom feature.
-	 */
-	$feature = make_custom_feature( 'show_current_stage_info' );
+\add_action(
+	'muplugins_loaded',
+	function () {
+		/**
+		 * Create a custom feature.
+		 */
+		$feature = make_custom_feature( 'show_current_stage_info' );
 
-	/**
-	 * Show info for the current stage in the admin toolbar.
-	 *
-	 * @wp-hook admin_bar_menu
-	 */
-	$feature->set_callback( 'admin_bar_menu', function ( $wp_admin_bar ) {
-		$env  = \ucfirst( \wp_get_environment_type() );
-		$args = [
-			'id'     => 'current-stage',
-			'title'  => \sprintf( '%s Current Stage: %s', '<span class="dashicons dashicons-admin-site dashicons-before" style="padding: 7px 0; box-sizing: border-box;"></span>', $env ),
-			'meta'   => [ 'class' => 'current-stage' ],
-			'parent' => 'top-secondary'
-		];
+		/**
+		 * Show info for the current stage in the admin toolbar.
+		 *
+		 * @wp-hook admin_bar_menu
+		 */
+		$feature->set_callback(
+			'admin_bar_menu',
+			function ( $wp_admin_bar ) {
+				$env  = \ucfirst( \wp_get_environment_type() );
+				$args = array(
+					'id'     => 'current-stage',
+					'title'  => \sprintf( '%s Current Stage: %s', '<span class="dashicons dashicons-admin-site dashicons-before" style="padding: 7px 0; box-sizing: border-box;"></span>', $env ),
+					'meta'   => array( 'class' => 'current-stage' ),
+					'parent' => 'top-secondary',
+				);
 
-		$wp_admin_bar->add_node( $args );
-	} );
+				$wp_admin_bar->add_node( $args );
+			}
+		);
 
-	/**
-	 * Hook callback to the action.
-	 */
-	\add_action( 'admin_bar_menu', $feature->callback( 'admin_bar_menu' ) );
-} );
+		/**
+		 * Hook callback to the action.
+		 */
+		\add_action( 'admin_bar_menu', $feature->callback( 'admin_bar_menu' ) );
+	}
+);

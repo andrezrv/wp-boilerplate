@@ -22,25 +22,41 @@
 
 use function andrezrv\custom_features\make_custom_feature;
 
-\add_action( 'muplugins_loaded', function () {
-	/**
-	 * Create a custom feature.
-	 */
-	$feature = make_custom_feature( 'wp_mail_override' );
+\add_action(
+	'muplugins_loaded',
+	function () {
+		/**
+		 * Create a custom feature.
+		 */
+		$feature = make_custom_feature( 'wp_mail_override' );
 
-	/**
-	 * Avoid sending mails when working locally.
-	 */
-	$feature->set_callback( 'muplugins_loaded', function () {
-		if ( ! \function_exists( 'wp_mail' ) ) {
-			function wp_mail( string $to, string $subject, string $message, string $headers = '' ): bool {
-				return false;
+		/**
+		 * Avoid sending mails when working locally.
+		 */
+		$feature->set_callback(
+			'muplugins_loaded',
+			function () {
+				if ( ! \function_exists( 'wp_mail' ) ) {
+					/**
+					 * Override wp_mail to suppress all outgoing email locally.
+					 *
+					 * @param string $to      Recipient address (unused).
+					 * @param string $subject Email subject (unused).
+					 * @param string $message Email body (unused).
+					 * @param string $headers Optional headers (unused).
+					 *
+					 * @return bool
+					 */
+					function wp_mail( string $to, string $subject, string $message, string $headers = '' ): bool { // phpcs:ignore Generic.CodeAnalysis.UnusedFunctionParameter.FoundAfterLastUsed
+						return false;
+					}
+				}
 			}
-		}
-	} );
+		);
 
-	/**
-	 * Add the feature to the plugin.
-	 */
-	\add_action( 'muplugins_loaded', $feature->get_callback( 'muplugins_loaded' ), 20 );
-} );
+		/**
+		 * Add the feature to the plugin.
+		 */
+		\add_action( 'muplugins_loaded', $feature->get_callback( 'muplugins_loaded' ), 20 );
+	}
+);

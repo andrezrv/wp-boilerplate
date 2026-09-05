@@ -1,6 +1,4 @@
 <?php
-use function andrezrv\custom_features\make_custom_feature;
-
 /**
  * Remove Query Args From Assets.
  *
@@ -21,26 +19,35 @@ use function andrezrv\custom_features\make_custom_feature;
  * Text Domain:       andrezrv-custom-features
  * Domain Path:       /
  */
-\add_action( 'muplugins_loaded', function () {
-	/**
-	 * Create a custom feature.
-	 */
-	$feature = make_custom_feature( 'remove_query_args_from_assets' );
 
-	/**
-	 * Remove query args from asset URLs.
-	 */
-	$feature->set_callback( 'asset_loader_src', function ( $src ) {
-		if ( \str_contains( $src, 'ver=' ) ) {
-			$src = \remove_query_arg( 'ver', $src );
-		}
+use function andrezrv\custom_features\make_custom_feature;
 
-		return $src;
-	} );
+\add_action(
+	'muplugins_loaded',
+	function () {
+		/**
+		 * Create a custom feature.
+		 */
+		$feature = make_custom_feature( 'remove_query_args_from_assets' );
 
-	/**
-	 * Add the feature to the plugin.
-	 */
-	\add_filter( 'style_loader_src', $feature->callback( 'asset_loader_src' ), 9999 );
-	\add_filter( 'script_loader_src', $feature->callback( 'asset_loader_src' ), 9999 );
-} );
+		/**
+		 * Remove query args from asset URLs.
+		 */
+		$feature->set_callback(
+			'asset_loader_src',
+			function ( $src ) {
+				if ( \str_contains( $src, 'ver=' ) ) {
+					$src = \remove_query_arg( 'ver', $src );
+				}
+
+				return $src;
+			}
+		);
+
+		/**
+		 * Add the feature to the plugin.
+		 */
+		\add_filter( 'style_loader_src', $feature->callback( 'asset_loader_src' ), 9999 );
+		\add_filter( 'script_loader_src', $feature->callback( 'asset_loader_src' ), 9999 );
+	}
+);

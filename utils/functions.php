@@ -5,10 +5,11 @@
  * This file contains utility functions meant as helpers to initialize the
  * application and clean up configuration files.
  *
- * @author  Your Name <your@email.com>
- * @package your_project\utils
+ * @author  Andrés Villarreal <me@andrezrv.com>
+ * @package andrezrv\utils
  */
-namespace your_project\utils;
+
+namespace andrezrv\utils;
 
 use Dotenv\Dotenv;
 
@@ -33,25 +34,25 @@ function setup_autoload(): void {
 function find_file( string $start_dir, string $filename, int $max_levels = 1 ): bool|string {
 	$current_dir = $start_dir;
 
-	for ( $i = 0; $i <= $max_levels; $i ++ ) {
+	for ( $i = 0; $i <= $max_levels; $i++ ) {
 		$filepath = $current_dir . DIRECTORY_SEPARATOR . $filename;
 
 		if ( file_exists( $filepath ) ) {
 			return realpath( $filepath );
 		}
 
-		// Move one level up
-		$parentDir = dirname( $current_dir );
+		// Move one level up.
+		$parent_dir = dirname( $current_dir );
 
-		// Stop if we have reached the root directory
-		if ( $parentDir === $current_dir ) {
+		// Stop if we have reached the root directory.
+		if ( $parent_dir === $current_dir ) {
 			break;
 		}
 
-		$current_dir = $parentDir;
+		$current_dir = $parent_dir;
 	}
 
-	return false; // File not found within x levels
+	return false; // File not found within x levels.
 }
 
 /**
@@ -60,7 +61,7 @@ function find_file( string $start_dir, string $filename, int $max_levels = 1 ): 
  * @return void
  */
 function load_env(): void {
-	foreach ( [ 'local', 'development', 'qa', 'staging', 'production' ] as $stage ) {
+	foreach ( array( 'local', 'development', 'qa', 'staging', 'production' ) as $stage ) {
 		$env_stage_file = find_file( APPLICATION_PATH, '.env.' . $stage, 3 );
 
 		if ( $env_stage_file ) {
@@ -106,14 +107,16 @@ function load_env_config(): void {
  * @return string
  */
 function get_real_site_url(): string {
-	if ( ! ( $_SERVER['HTTP_HOST'] ?? false ) ) {
+	$host = isset( $_SERVER['HTTP_HOST'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTP_HOST'] ) ) : '';
+	if ( ! $host ) {
 		return '';
 	}
 
 	// Dynamically detect the current protocol.
-	$site_protocol = ( isset( $_SERVER['HTTPS'] ) && $_SERVER['HTTPS'] === 'on' ) ? 'https://' : 'http://';
+	$https         = isset( $_SERVER['HTTPS'] ) ? sanitize_text_field( wp_unslash( $_SERVER['HTTPS'] ) ) : '';
+	$site_protocol = ( 'on' === $https ) ? 'https://' : 'http://';
 
-	return $site_protocol . $_SERVER['HTTP_HOST'];
+	return $site_protocol . $host;
 }
 
 /**

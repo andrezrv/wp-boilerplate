@@ -24,23 +24,29 @@
 
 use function andrezrv\custom_features\make_custom_feature;
 
-\add_action( 'muplugins_loaded', function () {
-	/**
-	 * Create a custom feature.
-	 */
-	$feature = make_custom_feature( 'recover_default_theme_directory' );
+\add_action(
+	'muplugins_loaded',
+	function () {
+		/**
+		 * Create a custom feature.
+		 */
+		$feature = make_custom_feature( 'recover_default_theme_directory' );
 
-	/**
-	 * Set up a callback to register the default theme directory.
-	 *
-	 * @wp-hook setup_theme
-	 */
-	$feature->set_callback( 'setup_theme', function () {
-		\register_theme_directory( ABSPATH . 'wp-content/themes/' );
-	} );
+		/**
+		 * Set up a callback to register the default theme directory.
+		 *
+		 * @wp-hook setup_theme
+		 */
+		$feature->set_callback(
+			'setup_theme',
+			function () {
+				\register_theme_directory( ABSPATH . 'wp-content/themes/' );
+			}
+		);
 
-	/**
-	 * Hook callback to the action.
-	 */
-	\add_action( 'setup_theme', $feature->callback( 'setup_theme' ) );
-} );
+		/**
+		 * Hook callback to the action.
+		 */
+		\add_action( 'setup_theme', $feature->callback( 'setup_theme' ) );
+	}
+);

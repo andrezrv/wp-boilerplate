@@ -1,4 +1,10 @@
 <?php
+/**
+ * Custom Features functions.
+ *
+ * @package andrezrv\custom_features
+ */
+
 namespace andrezrv\custom_features;
 
 /**
@@ -19,7 +25,7 @@ function get_custom_feature_manager(): Custom_Feature_Manager {
 /**
  * Create a new custom feature instance.
  *
- * @param string $feature_name
+ * @param string $feature_name The name of the feature.
  *
  * @return Custom_Feature
  */

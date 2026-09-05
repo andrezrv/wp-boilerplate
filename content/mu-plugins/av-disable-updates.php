@@ -20,21 +20,22 @@
 
 use function andrezrv\custom_features\make_custom_feature;
 
-\add_action( 'muplugins_loaded', function () {
-	/**
-	 * Create a custom feature.
-	 */
-	$feature = make_custom_feature( 'disable_auto_update_plugin' );
+\add_action(
+	'muplugins_loaded',
+	function () {
+		/**
+		 * Create a custom feature.
+		 */
+		$feature = make_custom_feature( 'disable_auto_update_plugin' );
 
-	/**
-	 * Set up a callback to disable auto updates for plugins.
-	 */
-	$feature->set_callback( 'auto_update_plugin', '__return_false' );
+		/**
+		 * Set up a callback to disable auto updates for plugins.
+		 */
+		$feature->set_callback( 'auto_update_plugin', '__return_false' );
 
-	/**
-	 * Add the feature to the plugin.
-	 */
-	add_action( 'auto_update_plugin', $feature->callback( 'auto_update_plugin' ) );
-} );
-
-
+		/**
+		 * Add the feature to the plugin.
+		 */
+		add_action( 'auto_update_plugin', $feature->callback( 'auto_update_plugin' ) );
+	}
+);

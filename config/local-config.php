@@ -1,4 +1,10 @@
 <?php
+/**
+ * Local environment configuration.
+ *
+ * @package andrezrv
+ */
+
 /** Debugging mode */
 define( 'WP_DEBUG', true );
 define( 'WP_DEBUG_LOG', WP_DEBUG );
