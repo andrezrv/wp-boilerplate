@@ -6,9 +6,8 @@ TMP_CORE_DIR="$PROJECT_ROOT/.wp-core-tmp"
 PUBLIC_DIR="$PROJECT_ROOT/public"
 
 # Move freshly-installed WP core out of the temp location and into
-# public/. This never touches anything else already in public/ (namely
-# wp-config.php), since it only moves the specific items core installed
-# into the temp dir — Composer's installer never sees public/ directly.
+# public/. Only moves items Composer installed into the temp dir —
+# Composer's installer never sees public/ directly.
 if [ -d "$TMP_CORE_DIR" ]; then
     mkdir -p "$PUBLIC_DIR"
     shopt -s dotglob nullglob
@@ -75,16 +74,20 @@ for managed in "$PROJECT_ROOT/content/managed/themes"/*/; do
 done
 
 # Remove dangling symlinks left behind by packages removed from composer.json.
-for link in "$PROJECT_ROOT/content/plugins"/*/; do
-    if [ -L "$link" ] && [ ! -e "$link" ]; then
-        rm "$link"
-    fi
-done
+# find -type l is used instead of a */ glob because */ skips dangling symlinks.
+# The path is passed to rm without a trailing slash so the symlink itself is
+# removed rather than dereferenced.
+while IFS= read -r link; do
+    [ -e "$link" ] || rm "$link"
+done < <(find "$PROJECT_ROOT/content/plugins" -maxdepth 1 -type l)
 
-for link in "$PROJECT_ROOT/content/themes"/*/; do
-    if [ -L "$link" ] && [ ! -e "$link" ]; then
-        rm "$link"
-    fi
-done
+while IFS= read -r link; do
+    [ -e "$link" ] || rm "$link"
+done < <(find "$PROJECT_ROOT/content/themes" -maxdepth 1 -type l)
 
 echo "post-composer-install: symlinks rebuilt"
+
+# Install git hooks if CaptainHook is available (dev-only dependency).
+if [ -f "$PROJECT_ROOT/vendor/bin/captainhook" ]; then
+    "$PROJECT_ROOT/vendor/bin/captainhook" install --run-mode=force --only-enabled -q 2>/dev/null || true
+fi
