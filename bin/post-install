@@ -57,8 +57,9 @@ for managed in "$PROJECT_ROOT/content/managed/plugins"/*/; do
     [ -d "$managed" ] || continue
     name="$(basename "$managed")"
     link="$PROJECT_ROOT/content/plugins/$name"
-    # Only create/refresh the symlink if the slot is empty or already a symlink.
-    # A real directory there is a manual install with a name collision — leave it alone.
+    if [ -d "$link" ] && [ ! -L "$link" ]; then
+        rm -rf "$link"
+    fi
     if [ -L "$link" ] || [ ! -e "$link" ]; then
         ln -sfn "../managed/plugins/$name" "$link"
     fi
@@ -68,6 +69,9 @@ for managed in "$PROJECT_ROOT/content/managed/themes"/*/; do
     [ -d "$managed" ] || continue
     name="$(basename "$managed")"
     link="$PROJECT_ROOT/content/themes/$name"
+    if [ -d "$link" ] && [ ! -L "$link" ]; then
+        rm -rf "$link"
+    fi
     if [ -L "$link" ] || [ ! -e "$link" ]; then
         ln -sfn "../managed/themes/$name" "$link"
     fi
