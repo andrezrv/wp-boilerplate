@@ -169,7 +169,7 @@ If your `composer.json` references private repositories (e.g. premium plugins ho
 
 ## Server-side tools
 
-Provisioning, post-deployment tasks, and database management are handled by a dedicated server-tools project, which lives outside this repository.
+Provisioning, post-deployment tasks, and database management are handled by the [andrezrv/server-tools](https://github.com/andrezrv/server-tools) project, which lives outside this repository.
 
 ## Scheduled deploys and keep-alive
 
