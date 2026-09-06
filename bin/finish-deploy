@@ -153,6 +153,25 @@ fi
 
 wps release:activate "$SITE_NAME" "$NEW_TS"
 
+# --- Update non-managed plugins and themes (real directories, not symlinks).
+# Managed extensions are symlinks into content/managed/ and are updated by
+# Composer on the next deploy; only manually installed ones need wp-cli here.
+log "Updating non-managed plugins..."
+while IFS= read -r entry; do
+    [ -L "$entry" ] && continue
+    slug="$(basename "$entry")"
+    sudo -u "$SITE_USER" wp --path="$NEW_RELEASE/public" plugin update "$slug" \
+        || log "WARNING: plugin update failed for $slug"
+done < <(find "$NEW_RELEASE/content/plugins" -mindepth 1 -maxdepth 1 2>/dev/null || true)
+
+log "Updating non-managed themes..."
+while IFS= read -r entry; do
+    [ -L "$entry" ] && continue
+    slug="$(basename "$entry")"
+    sudo -u "$SITE_USER" wp --path="$NEW_RELEASE/public" theme update "$slug" \
+        || log "WARNING: theme update failed for $slug"
+done < <(find "$NEW_RELEASE/content/themes" -mindepth 1 -maxdepth 1 2>/dev/null || true)
+
 # --- Prune old releases, keep the most recent N ---
 log "Pruning old releases, keeping the $KEEP_RELEASES most recent..."
 ls -t "$SITE_DIR/releases" | tail -n +$((KEEP_RELEASES + 1)) | while read -r old; do
