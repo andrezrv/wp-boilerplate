@@ -70,10 +70,10 @@ Nothing in `content/plugins/`, `content/themes/`, or `public/` should ever be co
 - `wp-config.php` — committed at the app root (one directory above `public/`). WordPress finds it automatically there. `ABSPATH` inside it points to `public/`.
 - `public/` — WordPress core (`wp-load.php`, `wp-admin/`, etc.). Nothing in here is committed.
 - `content/` — the custom `wp-content` equivalent. `content/mu-plugins/` is the only subdirectory committed here.
-- `content/managed/` — where Composer installs plugins and themes; symlinked to `content/plugins/` and `content/themes/` by `bin/post-install`.
-- `config/` — `global-config.php` is always loaded; the matching env file (`local-config.php`, `production-config.php`, etc.) is loaded automatically based on which file exists.
+- `content/managed/plugins/` and `content/managed/themes/` — where Composer installs plugins and themes. `bin/post-install` symlinks these into `content/plugins/` and `content/themes/`. Composer-managed extensions are always symlinks; manually installed extensions are real directories.
+- `config/` — `global-config.php` is always loaded; the matching env file (`local-config.php`, `production-config.php`, etc.) is loaded automatically based on which file exists. `config/secrets.php` holds WordPress salts — never committed, carried forward across deploys or generated fresh on first deploy.
 - `bootstrap/` — PHP files loaded before WordPress boots, via `andrezrv\utils\bootstrap()`.
-- `utils/functions.php` — autoload setup, env-file loading, and the env-detection logic.
+- `utils/functions.php` — autoload setup, env-file loading, env-detection, and `is_managed_site()`.
 
 ### Environment configuration
 
@@ -81,12 +81,16 @@ Environment is determined by the filename of the `.env.{stage}` file present on 
 
 Config files (`config/local-config.php`, etc.) follow the same priority order and are selected automatically by `utils/functions.php`.
 
+`is_managed_site()` (in `utils/functions.php`) returns `false` if an `unmanaged` file exists anywhere up to 5 directory levels above `APPLICATION_PATH`. This lets `av-enable-disable-features` distinguish boilerplate-managed installs from standalone WordPress installs where the deploy system does not control everything.
+
 ### mu-plugins and the feature flag system
 
 All custom must-use plugins live in `content/mu-plugins/`. They are built on `av-custom-features`, a small in-house feature flag framework:
 
 - `av-custom-features` — provides `Custom_Feature_Manager` and the `make_custom_feature()` / `get_custom_feature_manager()` functions. A feature is registered by calling `make_custom_feature('name')`, which fires the `andrezrv/custom_features_init` action.
-- `av-enable-disable-features` — the single place that decides which features are active per environment. It calls `disable_feature()` on features that should be off in the current environment (e.g. mail suppression is only active locally).
+- `av-enable-disable-features` — the single place that decides which features are active per environment and site type. It evaluates callbacks to decide whether to call `disable_feature()` — e.g., mail suppression is only active locally; `recover_default_theme_directory` is only active locally or on unmanaged sites.
+- `av-managed-extensions` — marks Composer-managed plugins and themes (identified by their being symlinks into `content/managed/`) as non-deletable in the WordPress admin. Adds a "Managed" filter tab on the plugins screen and blocks deletion both from the admin UI and direct URL access.
+- `av-recover-default-theme-directory` — registers the default `wp-content/themes/` directory so bundled WordPress themes are available even with a custom `WP_CONTENT_DIR`. Active locally and on unmanaged sites only (see `av-enable-disable-features`).
 - Each other mu-plugin registers its callbacks via `$feature->set_callback('hook', fn)` and attaches them with `$feature->callback('hook')`, which returns a no-op if the feature is disabled.
 
 To add a new environment-conditional behavior: create a mu-plugin that registers a feature via `make_custom_feature()`, define its hook callbacks with `set_callback`, and if it should be off in some environments, add a `disable_feature()` call to `av-enable-disable-features.php`.
@@ -102,4 +106,17 @@ The hook is installed automatically when `composer install` runs (via `bin/post-
 
 ### Deployment
 
-Pushes to `main` trigger GitHub Actions. The workflow runs `composer update --no-dev` on GitHub's infrastructure, rsyncs the build to the server, then runs `bin/finish-deploy` on the server. Releases are kept in timestamped directories; `current` is a symlink re-pointed atomically on each deploy. The 3 most recent releases are retained.
+Pushes to `main` trigger GitHub Actions. The workflow runs `composer update --no-dev` on GitHub's infrastructure, rsyncs the build to a staging path on the server, then invokes `bin/finish-deploy <site-name> <staging-path> <environment>`. `bin/finish-deploy` uses the `wps` server CLI to take a pre-deploy backup and atomically activate the new release.
+
+`bin/finish-deploy` does the following before the swap:
+- Merges forward `content/` items that git/Composer don't manage (cache, drop-ins, etc.), excluding `mu-plugins`, `managed`, and `uploads`.
+- Carries forward manually installed plugins and themes (real directories, not symlinks) from the previous release.
+
+After moving the build into `releases/<timestamp>/`:
+- Removes `bin/` from the live release (only needed on the runner to invoke this script).
+- Prunes `config/` to `${ENVIRONMENT}-config.php` and `global-config.php` only.
+- Strips repo/dev artifacts: `composer.json`, `composer.lock`, `.github`, `phpcs.xml.dist`, `captainhook.json`, `CLAUDE.md`, `.claude`, `package.json`, `yarn.lock`, `node_modules`, `LICENSE`, `README.md`, and `.env*.sample` files.
+- Carries `config/secrets.php` forward from the current release, or generates it fresh from the WordPress secret-key API on first deploy.
+- Updates non-managed plugins and themes (real directories, not symlinks) via `wp-cli` after release activation.
+
+Releases are kept in timestamped directories under `releases/`; `current` is a symlink re-pointed atomically. The 3 most recent releases are retained.
