@@ -121,6 +121,19 @@ function get_real_site_url(): string {
 }
 
 /**
+ * Check if the site is managed through an external tool.
+ *
+ * @return bool
+ */
+function is_managed_site(): bool {
+	if ( find_file( APPLICATION_PATH, 'unmanaged', 5 ) ) {
+		return false;
+	}
+
+	return true;
+}
+
+/**
  * Load the application bootstrap files.
  *
  * @return void

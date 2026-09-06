@@ -21,6 +21,7 @@
  */
 
 use function andrezrv\custom_features\get_custom_feature_manager;
+use function andrezrv\utils\is_managed_site;
 
 add_action(
 	'muplugins_loaded',
@@ -30,7 +31,7 @@ add_action(
 
 		$disable_features = [
 			'wp_mail_override'                => fn() => ! $is_local_env || $allows_local_email,
-			'recover_default_theme_directory' => fn() => ! $is_local_env,
+			'recover_default_theme_directory' => fn() => ! $is_local_env && is_managed_site(),
 			'remove_query_args_from_assets'   => fn() => ! $is_local_env,
 			'deactivate_plugins'              => fn() => ! $is_local_env,
 		];
