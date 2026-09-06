@@ -16,8 +16,16 @@
 		"composer/installers": "^2.3",
 		"johnpbloch/wordpress-core-installer": "^2.0",
 		"johnpbloch/wordpress-core": "*",
-		"wpackagist-plugin/akismet":  "*",
-		"wpackagist-plugin/hello-dolly":  "*",
+		"wpackagist-plugin/two-factor": "*",
+		"wpackagist-plugin/limit-login-attempts-reloaded": "*",
+		"wpackagist-plugin/google-site-kit": "*",
+		"wpackagist-plugin/fluentform": "*",
+		"wpackagist-plugin/fluent-smtp": "*",
+		"wpackagist-plugin/cache-enabler": "*",
+		"wpackagist-plugin/autoptimize": "*",
+		"wpackagist-plugin/generateblocks": "*",
+		"wpackagist-plugin/safe-svg": "*",
+		"wpackagist-plugin/404page": "*",
 		"wpackagist-theme/generatepress": "*"
 	},
 	"repositories": [
