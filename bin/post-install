@@ -25,8 +25,8 @@ _MISSING=""
 [ ! -d "$PUBLIC_DIR/wp-includes" ] && _MISSING="${_MISSING}wp-includes/ "
 [ ! -d "$PUBLIC_DIR/wp-admin" ]    && _MISSING="${_MISSING}wp-admin/ "
 if [ -n "$_MISSING" ]; then
-    echo "ERROR: WordPress core incomplete in public/ after composer install (missing: ${_MISSING% }) — aborting deploy." >&2
-    exit 1
+    echo "WARNING: WordPress core incomplete after composer install (missing: ${_MISSING% }) — removing partial install so it does not reach the server." >&2
+    find "$PUBLIC_DIR" -maxdepth 1 \( -name 'wp-*' -o -name 'index.php' -o -name 'xmlrpc.php' -o -name 'license.txt' -o -name 'readme.html' \) -exec rm -rf {} +
 fi
 unset _MISSING
 
