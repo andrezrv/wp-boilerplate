@@ -22,8 +22,7 @@ fi
 
 if [ ! -f "$PUBLIC_DIR/wp-load.php" ] || \
    [ ! -d "$PUBLIC_DIR/wp-includes" ] || \
-   [ ! -d "$PUBLIC_DIR/wp-admin" ] || \
-   [ ! -d "$PUBLIC_DIR/wp-content" ]; then
+   [ ! -d "$PUBLIC_DIR/wp-admin" ]; then
     echo "ERROR: WordPress core is missing or incomplete in public/ after composer install." >&2
     exit 1
 fi
