@@ -20,8 +20,14 @@ jobs:
         with:
           php-version: '8.5'
 
+      - name: Ensure clean WordPress core staging directory
+        run: rm -rf .wp-core-tmp
+
       - name: Install dependencies
         run: composer update --no-interaction --no-progress --no-dev
+
+      - name: Remove WordPress core staging directory
+        run: rm -rf .wp-core-tmp
 
       # A fresh agent instance — only this one key gets offered when
       # connecting to the production server.

@@ -20,12 +20,15 @@ if [ -d "$TMP_CORE_DIR" ]; then
     rmdir "$TMP_CORE_DIR" 2>/dev/null || rm -rf "$TMP_CORE_DIR"
 fi
 
-if [ ! -f "$PUBLIC_DIR/wp-load.php" ] || \
-   [ ! -d "$PUBLIC_DIR/wp-includes" ] || \
-   [ ! -d "$PUBLIC_DIR/wp-admin" ]; then
-    echo "ERROR: WordPress core is missing or incomplete in public/ after composer install — aborting deploy." >&2
+_MISSING=""
+[ ! -f "$PUBLIC_DIR/wp-load.php" ] && _MISSING="${_MISSING}wp-load.php "
+[ ! -d "$PUBLIC_DIR/wp-includes" ] && _MISSING="${_MISSING}wp-includes/ "
+[ ! -d "$PUBLIC_DIR/wp-admin" ]    && _MISSING="${_MISSING}wp-admin/ "
+if [ -n "$_MISSING" ]; then
+    echo "ERROR: WordPress core incomplete in public/ after composer install (missing: ${_MISSING% }) — aborting deploy." >&2
     exit 1
 fi
+unset _MISSING
 
 # content/uploads -> ../shared/uploads, relative, one level up from
 # content/. Correct as-is for local dev (shared/ genuinely sits one
