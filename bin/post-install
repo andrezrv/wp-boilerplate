@@ -20,6 +20,14 @@ if [ -d "$TMP_CORE_DIR" ]; then
     rmdir "$TMP_CORE_DIR" 2>/dev/null || rm -rf "$TMP_CORE_DIR"
 fi
 
+if [ ! -f "$PUBLIC_DIR/wp-load.php" ] || \
+   [ ! -d "$PUBLIC_DIR/wp-includes" ] || \
+   [ ! -d "$PUBLIC_DIR/wp-admin" ] || \
+   [ ! -d "$PUBLIC_DIR/wp-content" ]; then
+    echo "ERROR: WordPress core is missing or incomplete in public/ after composer install." >&2
+    exit 1
+fi
+
 # content/uploads -> ../shared/uploads, relative, one level up from
 # content/. Correct as-is for local dev (shared/ genuinely sits one
 # level above the project root there). On a production deploy built on
