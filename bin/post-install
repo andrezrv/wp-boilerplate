@@ -20,28 +20,11 @@ if [ -d "$TMP_CORE_DIR" ]; then
     rmdir "$TMP_CORE_DIR" 2>/dev/null || rm -rf "$TMP_CORE_DIR"
 fi
 
-# If the core-installer was skipped (e.g. warm composer cache on a CI runner),
-# .wp-core-tmp was never created and the move above was a no-op. Fall back to
-# a direct download so the built package is always complete.
 if [ ! -f "$PUBLIC_DIR/wp-load.php" ] || \
    [ ! -d "$PUBLIC_DIR/wp-includes" ] || \
    [ ! -d "$PUBLIC_DIR/wp-admin" ]; then
-    echo "WordPress core missing from public/ after composer — downloading directly..."
-    _WP_ZIP="$(mktemp /tmp/wordpress-XXXXXX.zip)"
-    _WP_TMP="$(mktemp -d /tmp/wordpress-XXXXXX)"
-    curl -fL -o "$_WP_ZIP" "https://wordpress.org/latest.zip"
-    unzip -q "$_WP_ZIP" -d "$_WP_TMP"
-    mkdir -p "$PUBLIC_DIR"
-    shopt -s dotglob nullglob
-    for item in "$_WP_TMP/wordpress"/*; do
-        base="$(basename "$item")"
-        [ "$base" = "wp-content" ] && continue
-        rm -rf "${PUBLIC_DIR:?}/${base:?}"
-        mv "$item" "$PUBLIC_DIR/"
-    done
-    shopt -u dotglob nullglob
-    rm -f "$_WP_ZIP"
-    rm -rf "$_WP_TMP"
+    echo "ERROR: WordPress core is missing or incomplete in public/ after composer install — aborting deploy." >&2
+    exit 1
 fi
 
 # content/uploads -> ../shared/uploads, relative, one level up from
